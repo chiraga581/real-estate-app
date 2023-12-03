@@ -1,8 +1,8 @@
 // eslint-disable-next-line no-unused-vars
-import React, { useReducer, useState } from 'react'
+import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { Link , useNavigate } from 'react-router-dom'
-import { signInStart, signInSuccess ,signInFailure } from '../redux/user/userSlice';
+import { signInStart, signInSuccess ,signInFailure } from '../redux/user/userSlice.js';
 
 const SignIn = () => {
   const [formData, setFormData] = useState({});
