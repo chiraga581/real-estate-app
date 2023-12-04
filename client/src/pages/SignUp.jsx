@@ -1,6 +1,7 @@
 // eslint-disable-next-line no-unused-vars
 import React, { useState } from 'react'
 import { Link , useNavigate } from 'react-router-dom'
+import OAuth from '../components/OAuth';
 
 const SignUp = () => {
   const [formData, setFormData] = useState({});
@@ -67,6 +68,7 @@ const SignUp = () => {
             <button disabled={loading}  className='bg-slate-700 text-white p-3 rounded-xl uppercase hover:opacity-95 disabled:opacity-100'> 
               {loading ? "Loading..." : "Signn Up"}
             </button>
+            <OAuth />
         </form>
         <div className='flex gap-2 mt-5'>
           <p>Have an Account ? </p>
