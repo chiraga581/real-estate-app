@@ -1,14 +1,27 @@
 //eslint-disable-next-line no-unused-vars
 import React from 'react'
+import { useRef } from 'react'
 import { useSelector } from 'react-redux'
+
 const Profile = () => {
-  const {currentUser}  = useSelector((store) => store.user)
+  const {currentUser}  = useSelector((store) => store.user);
+  const fileRef = useRef(null)
+  const handleImageClick = () => {
+    fileRef.current.click()
+  }
   return (
     
     <div className='p-3 max-w-lg mx-auto'>            
       <h1 className='text-3xl font-semibold text-center my-7 '>Profile</h1>        
       <form className='flex flex-col gap-4'>
+        <input 
+          type='file'
+          ref={fileRef}
+          hidden
+          accept='image/*'
+        />
         <img 
+          onClick={handleImageClick}
           src={currentUser.avatar} alt='Profile' 
           className='rounded-full h-24 w-24 object-cover cursor-pointer self-center'
         />
