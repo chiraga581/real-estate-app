@@ -1,59 +1,88 @@
-//eslint-disable-next-line no-unused-vars
-import React, { useEffect, useState } from 'react'
+
+import { useEffect, useState } from 'react'
 import { useRef } from 'react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import {getDownloadURL, getStorage, ref, uploadBytesResumable} from "firebase/storage"
 import { app } from '../firebase'
+import { updateUserStart , updateUserSuccess , updateUserFailure } from '../redux/user/userSlice'
 
 const Profile = () => {
-  const {currentUser}  = useSelector((store) => store.user);
+  const fileRef = useRef(null);
+  const {currentUser , loading , error}  = useSelector((state) => state.user);
   const [file, setFile] = useState(undefined);
   const [uploadPercentage , setUploadPercentage] = useState(0);
   const [fileUploadError , setFileUploadError] = useState(false)
-  const fileRef = useRef(null);
+  const [updateSuccess , setUpdateSuccess] = useState(false);
   const [formData ,setFormData] = useState({})
-
+  const dispatch = useDispatch();  
   
+  useEffect(()=>{
+    if(file){
+      handleFileUpload(file);
+    }
+  },[file])
   
   const handleImageClick = () => {
     fileRef.current.click()
   };
-
+  
   const handleFileUpload = (file) => {
     const storage = getStorage(app);
     const fileName = new Date().getTime() + file.name;
     const storageReference = ref(storage , fileName);
     const uploadTask = uploadBytesResumable(storageReference , file);
-
+    
     uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes)*100 ;
-        setUploadPercentage(Math.round(progress));
+    (snapshot) => {
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes)*100 ;
+      setUploadPercentage(Math.round(progress));
 
       },
       (error) => {
+        console.log(error)
         setFileUploadError(true);
       },
       () =>{
-        getDownloadURL(uploadTask.snapshot.ref)
-        .then((downloadURL) => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
           setFormData({...formData , avatar: downloadURL});
         })
       }
     );
   };
 
-  useEffect(()=>{
-    if(file){
-      handleFileUpload(file);
+
+  const handleChange = (e) => {
+    setFormData({...formData , [e.target.id]: e.target.value})
+  }
+  
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      dispatch(updateUserStart());
+      const res = await fetch(`/api/user/update/${currentUser._id}`,{
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      const data = res.json();
+      if(data.success === false){
+        dispatch(updateUserFailure(data.message));
+        return;
+      }
+      dispatch(updateUserSuccess(data));
+      setUpdateSuccess(true);
+    } catch (error) {
+        dispatch(updateUserFailure(error.message))
     }
-  },[file])
+  }
 
   return (
     
     <div className='p-3 max-w-lg mx-auto'>            
       <h1 className='text-3xl font-semibold text-center my-7 '>Profile</h1>        
-      <form className='flex flex-col gap-4'>
+      <form onSubmit={handleSubmit} className='flex flex-col gap-4'>
         <input 
           onChange={(event) => {
             setFile(event.target.files[0])
@@ -80,29 +109,43 @@ const Profile = () => {
         <input
           type='text'
           id='username'
+          defaultValue={currentUser.username}
           placeholder='Username'
           className='border p-3 rounded-lg '
+          onChange={handleChange}
         />
         <input
           type='email'
           id='email'
+          defaultValue={currentUser.email}
           placeholder='Email'
           className='border p-3 rounded-lg '
+          onChange={handleChange}
         />
         <input
-          type='text'
+          type='password'
           id='password'
           placeholder='password'
+          
           className='border p-3 rounded-lg '
+          onChange={handleChange}
         />
-        <button className='bg-slate-700 text-white rounded-lg p-3 uppercase hover:opacity-95 disabled:opacity-80'>Update</button>
+        <button disabled={loading} 
+          className='bg-slate-700 text-white rounded-lg p-3 uppercase 
+          hover:opacity-95 disabled:opacity-80'>
+          
+          {loading ? 'Loading...' : 'Update'}
+        
+        </button>
       </form>
       <div className='flex justify-between mt-5'>
         <span className='text-red-700 cursor-pointer '> Delete Account </span>
         <span className='text-red-700 cursor-pointer '> Sign Out </span>
       </div>
+      <p className='text-red-700 mt-5'>{error ? error : ""}</p>
+      <p className='text-green-700 mt-5'>{updateSuccess ? "User is updated successfully" : "  " }</p>
     </div>
   )
 }
 
-export default Profile
+export default Profile;
