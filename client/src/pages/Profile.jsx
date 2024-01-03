@@ -30,6 +30,8 @@ const Profile = () => {
       handleFileUpload(file);
     }
   },[file])
+
+  
   
   const handleImageClick = () => {
     fileRef.current.click()
