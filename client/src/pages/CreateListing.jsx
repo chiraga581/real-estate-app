@@ -45,7 +45,7 @@ export const CreateListing = () => {
                 "state_changed",
                 snapshot => {
                     const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    console.log(progress)
+                    console.log("progress - > " , progress)
                 },
                 (error) => {
                     reject(error);
